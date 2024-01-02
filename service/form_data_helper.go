@@ -5,32 +5,51 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
 
-func FormDataHelper(res *gin.Context, file_key_name string) []map[string]interface{} {
+func FormDataHelper(res *gin.Context, file_key_name string) (result []map[string]interface{}, err error) {
+
+	//rekoferi setelah panic attack
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered in FormDataHelper %v", r)
+			result = nil
+			err = fmt.Errorf("%v", r)
+		}
+	}()
 
 	// inisialisasi array kosong
 	// arr_file := []map[string]interface{}{}
-	//atau
+	// atau
 	var arr_file []map[string]interface{} //juga bisa
 
 	file_data, err := res.MultipartForm() // mengambil data dari form
 
 	if err != nil {
-		panic("Gagal upload file")
+		log.Println(err.Error())
+		// panic("Gagal upload file karena field '" + file_key_name + "' harus di isi")
+		return nil, fmt.Errorf("gagal upload file karena field '" + file_key_name + "' harus di isi")
 	}
 
 	if file_key_name == "" {
-		panic("File key name tidak ada")
+		// panic("File key name tidak ada")
+		return nil, fmt.Errorf("file key name tidak ada")
 	}
 
-	files := file_data.File[file_key_name] // mengambil file dari form
+	files, file_ok := file_data.File[file_key_name] // mengambil file dari form
 	if len(files) == 0 {
-		panic("File tidak ada")
-
+		// panic("File tidak ada")
+		return nil, fmt.Errorf("file tidak ada (1)")
 	}
+
+	if !file_ok {
+		return nil, fmt.Errorf("file tidak ada (2)")
+	}
+
+	MaxFileSize := 2 //MB
 
 	for i, file := range files {
 
@@ -38,8 +57,9 @@ func FormDataHelper(res *gin.Context, file_key_name string) []map[string]interfa
 
 		var buffer bytes.Buffer
 
-		if file.Size > 2<<20 { //2MB
-			panic(fmt.Sprintf("File ke-%d terlalu besar", i+1))
+		if file.Size > int64(MaxFileSize)<<20 { //2MB
+			// panic(fmt.Sprintf("File ke-%d terlalu besar", i+1))
+			return nil, fmt.Errorf(fmt.Sprintf("file ke-%d terlalu besar", i+1))
 		}
 
 		/**
@@ -58,7 +78,8 @@ func FormDataHelper(res *gin.Context, file_key_name string) []map[string]interfa
 
 		fileContent, err := file.Open()
 		if err != nil {
-			panic(fmt.Sprintf("Gagal membuka file pada file ke-%d", i+1))
+			// panic(fmt.Sprintf("Gagal membuka file pada file ke-%d", i+1))
+			return nil, fmt.Errorf(fmt.Sprintf("gagal membuka file pada file ke-%d", i+1))
 
 		}
 		defer fileContent.Close()
@@ -66,7 +87,8 @@ func FormDataHelper(res *gin.Context, file_key_name string) []map[string]interfa
 		_, err = io.Copy(&buffer, fileContent) //copy file ke buffer
 
 		if err != nil {
-			panic(fmt.Sprintf("Gagal mengunggah file ke-%d", i+1))
+			// panic(fmt.Sprintf("Gagal mengunggah file ke-%d", i+1))
+			return nil, fmt.Errorf(fmt.Sprintf("gagal mengunggah file ke-%d", i+1))
 		}
 
 		fileByte := buffer.Bytes() //mengambil data dari buffer
@@ -81,5 +103,5 @@ func FormDataHelper(res *gin.Context, file_key_name string) []map[string]interfa
 		})
 	}
 
-	return arr_file
+	return arr_file, err
 }

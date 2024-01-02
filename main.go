@@ -5,9 +5,12 @@ import (
 	"belajar_golang/routes"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 )
+
+var once sync.Once
 
 func main() {
 
@@ -15,10 +18,12 @@ func main() {
 	 * Load .env file
 	 */
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
+	once.Do(func() {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal(err)
+		}
+	})
 
 	port := os.Getenv("PORT")
 

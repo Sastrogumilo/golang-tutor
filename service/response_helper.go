@@ -15,7 +15,7 @@ func JsonBerhasil(value interface{}, res *gin.Context, message string) *gin.Cont
 
 	type response struct {
 		Response interface{} `json:"response"`
-		MetaData metadata
+		MetaData metadata    `json:"metadata"`
 	}
 
 	data := response{
@@ -27,7 +27,7 @@ func JsonBerhasil(value interface{}, res *gin.Context, message string) *gin.Cont
 	return res
 }
 
-func JsonGagal(message string, res *gin.Context, err string) *gin.Context {
+func JsonGagal(message string, res *gin.Context) *gin.Context {
 
 	type metadata struct {
 		Status  int    `json:"status"`
@@ -36,11 +36,11 @@ func JsonGagal(message string, res *gin.Context, err string) *gin.Context {
 
 	type response struct {
 		Response interface{} `json:"response"`
-		MetaData metadata
+		MetaData metadata    `json:"metadata"`
 	}
 
 	data := response{
-		Response: err,
+		Response: []string{},
 		MetaData: metadata{400, message},
 	}
 

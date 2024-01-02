@@ -12,7 +12,6 @@ import (
 
 func TestIndex(res *gin.Context) {
 	res.JSON(200, gin.H{"message": "Hello World"})
-	return
 }
 
 func TestIndex2(res *gin.Context) {
@@ -55,13 +54,13 @@ func TestPostForm(res *gin.Context) {
 	file_data, err := res.MultipartForm() // mengambil data dari form
 
 	if err != nil {
-		services.JsonGagal("Gagal upload file", res, "")
+		services.JsonGagal("Gagal upload file", res)
 		return
 	}
 
 	files := file_data.File["file"] // mengambil file dari form
 	if len(files) == 0 {
-		services.JsonGagal("File tidak ada", res, "")
+		services.JsonGagal("File tidak ada", res)
 		return
 	}
 
@@ -74,7 +73,7 @@ func TestPostForm(res *gin.Context) {
 		var buffer bytes.Buffer
 
 		if file.Size > 2<<20 { //2MB
-			services.JsonGagal(fmt.Sprintf("File ke-%d terlalu besar", i+1), res, "")
+			services.JsonGagal(fmt.Sprintf("File ke-%d terlalu besar", i+1), res)
 			return
 		}
 
@@ -102,7 +101,7 @@ func TestPostForm(res *gin.Context) {
 		_, err = io.Copy(&buffer, fileContent) //copy file ke buffer
 
 		if err != nil {
-			services.JsonGagal(fmt.Sprintf("Gagal mengunggah file ke-%d", i+1), res, "")
+			services.JsonGagal(fmt.Sprintf("Gagal mengunggah file ke-%d", i+1), res)
 			return
 		}
 
@@ -119,13 +118,51 @@ func TestPostForm(res *gin.Context) {
 	}
 
 	services.JsonBerhasil(arr_file, res, "")
-	return
+
 }
 
 func TestPostForm2(res *gin.Context) {
 
-	hasil := services.FormDataHelper(res, "file")
+	hasil_file, err := services.FormDataHelper(res, "file")
 
-	services.JsonBerhasil(hasil, res, "")
+	if err != nil {
+		services.JsonGagal(fmt.Sprintf("%v", err), res)
+		return
+	}
+
+	services.JsonBerhasil(hasil_file, res, "")
+
+}
+
+func TestPostFormUploadMinio(res *gin.Context) {
+
+	hasil_file, err := services.FormDataHelper(res, "file")
+
+	if err != nil {
+		services.JsonGagal(fmt.Sprintf("%v", err), res)
+		return
+	}
+
+	buffer_file, ok := hasil_file[0]["buffer"].(bytes.Buffer)
+
+	if !ok {
+		services.JsonGagal("Gagal mengambil file", res)
+		return
+	}
+
+	//check file size
+	if buffer_file.Len() > 2<<20 { //2MB
+		services.JsonGagal("File terlalu besar", res)
+		return
+	}
+
+	minio_url, err := services.MinioService(buffer_file, hasil_file[0]["file_name"].(string), "tipsylion", hasil_file[0]["file_type"].(string))
+
+	if err != nil {
+		services.JsonGagal(fmt.Sprintf("%v", err), res)
+		return
+	}
+
+	services.JsonBerhasil(minio_url, res, "")
 
 }

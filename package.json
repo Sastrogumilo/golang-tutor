@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-dev": "pm2-dev start 'go run main.go'",
+    "start-local": "pm2-dev start 'go run main.go'",
     "start-prod": "pm2 start go --name belajar-golang --watch main.go"
   },
   "author": "",

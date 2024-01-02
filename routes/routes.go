@@ -14,6 +14,7 @@ func Routes() *gin.Engine {
 	app.POST("/test_post", controllers.TestPost)
 	app.POST("/test_post_form", controllers.TestPostForm)
 	app.POST("/test_post_form2", controllers.TestPostForm2)
+	app.POST("/upload_minio_file", controllers.TestPostFormUploadMinio)
 
 	return app
 }
