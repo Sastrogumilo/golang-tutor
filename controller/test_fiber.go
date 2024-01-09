@@ -191,3 +191,20 @@ func TestPostFormUploadMinioFiber(res *fiber.Ctx) {
 	services.JsonBerhasilFiber(minio_url, res, "")
 
 }
+
+func TestDB1(res *fiber.Ctx) {
+
+	koneksi := services.GetLocal[services.MainDBService](res, "mainDB")
+
+	query := "SELECT * FROM sinarmas_dpmall.user_member"
+
+	hasil, err := koneksi.Query(query)
+
+	if err != nil {
+		services.JsonGagalFiber(fmt.Sprintf("%v", err), res)
+		return
+	}
+
+	services.JsonBerhasilFiber(hasil, res, "")
+
+}

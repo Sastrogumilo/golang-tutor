@@ -4,13 +4,13 @@ go 1.21.5
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-sql-driver/mysql v1.7.1
 
 	//fiber
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/joho/godotenv v1.5.1
 	//minio
 	github.com/minio/minio-go/v7 v7.0.66
-
 )
 
 require (

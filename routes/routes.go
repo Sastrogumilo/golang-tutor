@@ -2,10 +2,13 @@ package routes
 
 import (
 	controllers "belajar_golang/controller"
+	"log"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/gofiber/fiber/v2"
+
+	services "belajar_golang/service"
 )
 
 func Routes() *gin.Engine {
@@ -23,6 +26,18 @@ func Routes() *gin.Engine {
 
 func RoutesV2Fiber() *fiber.App {
 	app := fiber.New()
+
+	mainDB, err_db_main := services.MainDBServiceConnection()
+
+	if err_db_main != nil {
+		log.Fatal(err_db_main)
+	}
+
+	app.Use(func(c *fiber.Ctx) error {
+		//Set Local MainDB
+		services.SetLocal[services.MainDBService](c, "mainDB", *mainDB)
+		return c.Next()
+	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		controllers.TestIndexFiber(c)
@@ -52,6 +67,11 @@ func RoutesV2Fiber() *fiber.App {
 	})
 	app.Post("/upload_minio_file", func(c *fiber.Ctx) error {
 		controllers.TestPostFormUploadMinioFiber(c)
+		return nil
+	})
+
+	app.Get("/test_db", func(c *fiber.Ctx) error {
+		controllers.TestDB1(c)
 		return nil
 	})
 
