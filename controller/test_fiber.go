@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -77,6 +78,7 @@ func TestPostFormFiber(res *fiber.Ctx) {
 	file_data, err := res.MultipartForm() // mengambil data dari form
 
 	if err != nil {
+		log.Println(err)
 		services.JsonGagalFiber("Gagal upload file", res)
 		return
 	}

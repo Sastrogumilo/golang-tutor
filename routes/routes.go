@@ -42,7 +42,7 @@ func RoutesV2Fiber() *fiber.App {
 		controllers.TestPostFiber(c)
 		return nil
 	})
-	app.Post("/test_post_form", func(c *fiber.Ctx) error {
+	app.Post("/test_post_form_fiber", func(c *fiber.Ctx) error {
 		controllers.TestPostFormFiber(c)
 		return nil
 	})
