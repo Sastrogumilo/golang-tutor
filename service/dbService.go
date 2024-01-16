@@ -1,10 +1,13 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber/v2"
@@ -20,12 +23,10 @@ func GetLocal[T any](c *fiber.Ctx, key string) T {
 	return c.Locals(key).(T)
 }
 
-// MainDBService handles database connections and queries
 type MainDBService struct {
 	db *sql.DB
 }
 
-// Query executes a query or a list of SQL statements in a transaction
 func (d *MainDBService) Query(queries ...string) ([]map[string]interface{}, error) {
 	if d.db == nil {
 		return nil, errors.New("Database connection is not initialized")
@@ -41,14 +42,11 @@ func (d *MainDBService) query(queries ...string) ([]map[string]interface{}, erro
 
 	var results []map[string]interface{}
 
-	tx, err := d.db.Begin()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
 	for _, query := range queries {
-		rows, err := tx.Query(query)
+		rows, err := d.db.QueryContext(ctx, query)
 		if err != nil {
 			return nil, err
 		}
@@ -82,35 +80,26 @@ func (d *MainDBService) query(queries ...string) ([]map[string]interface{}, erro
 		}
 	}
 
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-
 	return results, nil
 }
 
-// MainDBServiceConnection creates and initializes the database connection
 func MainDBServiceConnection() (*MainDBService, error) {
 	dbMainHost := os.Getenv("DB_MAIN_HOST")
 	dbMainPort := os.Getenv("DB_MAIN_PORT")
 	dbMainUser := os.Getenv("DB_MAIN_USER")
 	dbMainPass := os.Getenv("DB_MAIN_PASS")
 
-	// fmt.Println("Environment variables:")
-	// fmt.Println("DB_MAIN_HOST:", dbMainHost)
-	// fmt.Println("DB_MAIN_PORT:", dbMainPort)
-	// fmt.Println("DB_MAIN_USER:", dbMainUser)
-	// fmt.Println("DB_MAIN_PASS:", dbMainPass) // Use for debugging, remove in production
-
-	dataSourceName := dbMainUser + ":" + dbMainPass + "@tcp(" + dbMainHost + ":" + dbMainPort + ")/"
+	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/", dbMainUser, dbMainPass, dbMainHost, dbMainPort)
 
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set max open connections and ping the database
-	db.SetMaxOpenConns(10)
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Minute * 5)
+
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
@@ -118,7 +107,6 @@ func MainDBServiceConnection() (*MainDBService, error) {
 	return &MainDBService{db: db}, nil
 }
 
-// Close closes the database connection pool
 func (d *MainDBService) Close() {
 	if d.db != nil {
 		d.db.Close()

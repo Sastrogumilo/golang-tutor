@@ -7,6 +7,8 @@ import (
 	"os"
 	"sync"
 
+	_ "net/http/pprof"
+
 	"github.com/joho/godotenv"
 )
 
@@ -25,6 +27,10 @@ func main() {
 		}
 
 	})
+
+	// go func() {
+	// 	http.ListenAndServe("localhost:6060", nil)
+	// }()
 
 	port := os.Getenv("PORT")
 
