@@ -205,6 +205,75 @@ func TestDB1(res *fiber.Ctx) {
 		return
 	}
 
-	services.JsonBerhasilFiber(hasil, res, "")
+	type UserMember struct {
+		Agama  string `json:"agama"`
+		Alamat string `json:"alamat"`
+		Uid    string `json:"uid"`
+	}
 
+	// convert ke struct
+	var user_member []UserMember
+
+	err = services.ConvertToStruct(hasil, &user_member)
+	if err != nil {
+		services.JsonGagalFiber(fmt.Sprintf("%v", err), res)
+		return
+	}
+
+	//make map to concat 2 map
+	hasil_map := map[string]interface{}{
+		"hasil1": user_member,
+		"hasil2": hasil,
+	}
+
+	/** Normal using map interface
+	C:\Users\Belldandy>autocannon http://192.168.20.100:6969/test_db
+	Running 10s test @ http://192.168.20.100:6969/test_db
+	10 connections
+
+
+	┌─────────┬──────┬───────┬───────┬───────┬──────────┬─────────┬────────┐
+	│ Stat    │ 2.5% │ 50%   │ 97.5% │ 99%   │ Avg      │ Stdev   │ Max    │
+	├─────────┼──────┼───────┼───────┼───────┼──────────┼─────────┼────────┤
+	│ Latency │ 6 ms │ 11 ms │ 35 ms │ 43 ms │ 13.56 ms │ 8.63 ms │ 123 ms │
+	└─────────┴──────┴───────┴───────┴───────┴──────────┴─────────┴────────┘
+	┌───────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+	│ Stat      │ 1%      │ 2.5%    │ 50%     │ 97.5%   │ Avg     │ Stdev   │ Min     │
+	├───────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+	│ Req/Sec   │ 512     │ 512     │ 729     │ 790     │ 712.3   │ 78.5    │ 512     │
+	├───────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+	│ Bytes/Sec │ 24.2 MB │ 24.2 MB │ 34.5 MB │ 37.4 MB │ 33.7 MB │ 3.71 MB │ 24.2 MB │
+	└───────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+
+	Req/Bytes counts sampled once per second.
+	# of samples: 10
+
+	7k requests in 10.04s, 337 MB read
+	*/
+
+	/** Convert to struct
+	C:\Users\Belldandy>autocannon http://192.168.20.100:6969/test_db
+	Running 10s test @ http://192.168.20.100:6969/test_db
+	10 connections
+
+	┌─────────┬──────┬───────┬───────┬───────┬──────────┬─────────┬───────┐
+	│ Stat    │ 2.5% │ 50%   │ 97.5% │ 99%   │ Avg      │ Stdev   │ Max   │
+	├─────────┼──────┼───────┼───────┼───────┼──────────┼─────────┼───────┤
+	│ Latency │ 7 ms │ 12 ms │ 36 ms │ 42 ms │ 14.45 ms │ 7.44 ms │ 66 ms │
+	└─────────┴──────┴───────┴───────┴───────┴──────────┴─────────┴───────┘
+	┌───────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬─────────┐
+	│ Stat      │ 1%      │ 2.5%    │ 50%     │ 97.5%   │ Avg     │ Stdev  │ Min     │
+	├───────────┼─────────┼─────────┼─────────┼─────────┼─────────┼────────┼─────────┤
+	│ Req/Sec   │ 581     │ 581     │ 659     │ 745     │ 668.8   │ 53.74  │ 581     │
+	├───────────┼─────────┼─────────┼─────────┼─────────┼─────────┼────────┼─────────┤
+	│ Bytes/Sec │ 1.52 MB │ 1.52 MB │ 1.72 MB │ 1.94 MB │ 1.74 MB │ 140 kB │ 1.52 MB │
+	└───────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴─────────┘
+
+	Req/Bytes counts sampled once per second.
+	# of samples: 10
+
+	7k requests in 10.03s, 17.4 MB read
+	*/
+
+	services.JsonBerhasilFiber(hasil_map, res, "")
 }

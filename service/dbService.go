@@ -3,9 +3,12 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
+	"reflect"
 	"sync"
 	"time"
 
@@ -29,7 +32,7 @@ type MainDBService struct {
 
 func (d *MainDBService) Query(queries ...string) ([]map[string]interface{}, error) {
 	if d.db == nil {
-		return nil, errors.New("Database connection is not initialized")
+		return nil, errors.New("database connection is not initialized")
 	}
 
 	return d.query(queries...)
@@ -111,4 +114,34 @@ func (d *MainDBService) Close() {
 	if d.db != nil {
 		d.db.Close()
 	}
+}
+
+func ConvertToStruct(data []map[string]interface{}, result interface{}) error {
+	resultv := reflect.ValueOf(result)
+	if resultv.Kind() != reflect.Ptr || resultv.Elem().Kind() != reflect.Slice {
+		return fmt.Errorf("result argument must be a slice address")
+	}
+
+	slicev := resultv.Elem()
+	elemt := slicev.Type().Elem()
+
+	for _, item := range data {
+		elemv := reflect.New(elemt)
+
+		jsonData, err := json.Marshal(item)
+		if err != nil {
+			return err
+		}
+
+		err = json.Unmarshal(jsonData, elemv.Interface())
+		if err != nil {
+			log.Printf("Warning: %v", err)
+			elemv.Elem().Set(reflect.Zero(elemt))
+		}
+
+		slicev = reflect.Append(slicev, elemv.Elem())
+	}
+
+	resultv.Elem().Set(slicev)
+	return nil
 }
