@@ -277,3 +277,17 @@ func TestDB1(res *fiber.Ctx) {
 
 	services.JsonBerhasilFiber(hasil_map, res, "")
 }
+
+func TestDBSQLx(res *fiber.Ctx) {
+
+	query := "SELECT * FROM sinarmas_dpmall.user_member1"
+
+	hasil, err := services.MainQuery(query)
+	if err != nil {
+		services.JsonGagalFiber("Gagal", res)
+		return
+	}
+
+	services.JsonBerhasilFiber(hasil, res, "")
+	return
+}

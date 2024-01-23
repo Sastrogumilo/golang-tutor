@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 
 	services "belajar_golang/service"
 )
@@ -25,7 +26,14 @@ func Routes() *gin.Engine {
 }
 
 func RoutesV2Fiber() *fiber.App {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			log.Println(err.Error())
+			return nil
+		},
+	})
+
+	app.Use(recover.New())
 
 	mainDB, err_db_main := services.MainDBServiceConnection()
 
@@ -72,6 +80,11 @@ func RoutesV2Fiber() *fiber.App {
 
 	app.Get("/test_db", func(c *fiber.Ctx) error {
 		controllers.TestDB1(c)
+		return nil
+	})
+
+	app.Get("/test_db2", func(c *fiber.Ctx) error {
+		controllers.TestDBSQLx(c)
 		return nil
 	})
 

@@ -11,6 +11,10 @@ require (
 	github.com/joho/godotenv v1.5.1
 	//minio
 	github.com/minio/minio-go/v7 v7.0.66
+
+	//sqlx
+	github.com/jmoiron/sqlx v1.3.5
+
 )
 
 require (
