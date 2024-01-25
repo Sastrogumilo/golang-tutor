@@ -194,11 +194,11 @@ func TestPostFormUploadMinioFiber(res *fiber.Ctx) {
 
 func TestDB1(res *fiber.Ctx) {
 
-	koneksi := services.GetLocal[services.MainDBService](res, "mainDB")
+	koneksi := services.GetLocal[services.TestMainDBService](res, "mainDB")
 
 	query := "SELECT * FROM sinarmas_dpmall.user_member"
 
-	hasil, err := koneksi.Query(query)
+	hasil, err := koneksi.TestQuery(query)
 
 	if err != nil {
 		services.JsonGagalFiber(fmt.Sprintf("%v", err), res)
@@ -282,12 +282,19 @@ func TestDBSQLx(res *fiber.Ctx) {
 
 	query := "SELECT * FROM sinarmas_dpmall.user_member1"
 
-	hasil, err := services.MainQuery(query)
+	type UserMember struct {
+		Agama  string `json:"agama"`
+		Alamat string `json:"alamat"`
+		Uid    string `json:"uid"`
+	}
+
+	var hasil []UserMember
+	err := services.MainDB().Query(query).ToStruct(&hasil)
 	if err != nil {
 		services.JsonGagalFiber("Gagal", res)
 		return
 	}
 
 	services.JsonBerhasilFiber(hasil, res, "")
-	return
+
 }

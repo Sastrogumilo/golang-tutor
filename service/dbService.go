@@ -16,7 +16,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var MainDBServiceInstance *MainDBService
+var MainDBServiceInstance *TestMainDBService
 var MainDBServiceOnce sync.Once
 
 func SetLocal[T any](c *fiber.Ctx, key string, value T) {
@@ -26,11 +26,11 @@ func GetLocal[T any](c *fiber.Ctx, key string) T {
 	return c.Locals(key).(T)
 }
 
-type MainDBService struct {
+type TestMainDBService struct {
 	db *sql.DB
 }
 
-func (d *MainDBService) Query(queries ...string) ([]map[string]interface{}, error) {
+func (d *TestMainDBService) TestQuery(queries ...string) ([]map[string]interface{}, error) {
 	if d.db == nil {
 		return nil, errors.New("database connection is not initialized")
 	}
@@ -38,7 +38,7 @@ func (d *MainDBService) Query(queries ...string) ([]map[string]interface{}, erro
 	return d.query(queries...)
 }
 
-func (d *MainDBService) query(queries ...string) ([]map[string]interface{}, error) {
+func (d *TestMainDBService) query(queries ...string) ([]map[string]interface{}, error) {
 	if len(queries) == 0 {
 		return nil, nil
 	}
@@ -86,7 +86,7 @@ func (d *MainDBService) query(queries ...string) ([]map[string]interface{}, erro
 	return results, nil
 }
 
-func MainDBServiceConnection() (*MainDBService, error) {
+func MainDBServiceConnection() (*TestMainDBService, error) {
 	dbMainHost := os.Getenv("DB_MAIN_HOST")
 	dbMainPort := os.Getenv("DB_MAIN_PORT")
 	dbMainUser := os.Getenv("DB_MAIN_USER")
@@ -107,10 +107,10 @@ func MainDBServiceConnection() (*MainDBService, error) {
 		return nil, err
 	}
 
-	return &MainDBService{db: db}, nil
+	return &TestMainDBService{db: db}, nil
 }
 
-func (d *MainDBService) Close() {
+func (d *TestMainDBService) Close() {
 	if d.db != nil {
 		d.db.Close()
 	}

@@ -26,6 +26,15 @@ func Routes() *gin.Engine {
 }
 
 func RoutesV2Fiber() *fiber.App {
+
+	//struct for dbConnection
+	type DBConnection struct {
+		Host string
+		Port string
+		User string
+		Pass string
+	}
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			log.Println(err.Error())
@@ -43,7 +52,7 @@ func RoutesV2Fiber() *fiber.App {
 
 	app.Use(func(c *fiber.Ctx) error {
 		//Set Local MainDB
-		services.SetLocal[services.MainDBService](c, "mainDB", *mainDB)
+		services.SetLocal[services.TestMainDBService](c, "mainDB", *mainDB)
 		return c.Next()
 	})
 
