@@ -280,7 +280,7 @@ func TestDB1(res *fiber.Ctx) {
 
 func TestDBSQLx(res *fiber.Ctx) {
 
-	query := "SELECT * FROM sinarmas_dpmall.user_member1"
+	query := "SELECT * FROM sinarmas_dpmall.user_member"
 
 	type UserMember struct {
 		Agama  string `json:"agama"`
@@ -288,9 +288,13 @@ func TestDBSQLx(res *fiber.Ctx) {
 		Uid    string `json:"uid"`
 	}
 
+	//Jika menggunakan toStruct maka return harus hasil, var hasil_data == nil
+
 	var hasil []UserMember
-	err := services.MainDB().Query(query).ToStruct(&hasil)
+	_, err := services.MainDB().QueryToStruct(query, &hasil) //pakai ini untuk menggunakan struct
+	// hasil_data, err := services.MainDB().Query(query) //pakai ini jika ingin los, yang penting dapat data
 	if err != nil {
+		// log.Println(hasil_data)
 		services.JsonGagalFiber("Gagal", res)
 		return
 	}

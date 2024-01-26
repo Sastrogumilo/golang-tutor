@@ -47,9 +47,7 @@ type MainDBService struct {
 	db *sqlx.DB
 }
 
-type QueryResult struct {
-	Data []map[string]interface{}
-}
+type QueryResult []map[string]interface{}
 
 var mainDBService *MainDBService
 
@@ -72,7 +70,7 @@ func MainDB() *MainDBService {
 	return mainDBService
 }
 
-func (s *MainDBService) Query(query string) *QueryResult {
+func (s *MainDBService) Query(query string) (*QueryResult, error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -89,7 +87,7 @@ func (s *MainDBService) Query(query string) *QueryResult {
 		rows, err := db.Queryx(query)
 		if err != nil {
 			log.Println(err.Error())
-			return nil
+			return nil, err
 		}
 
 		var result []map[string]interface{}
@@ -98,12 +96,12 @@ func (s *MainDBService) Query(query string) *QueryResult {
 			err = rows.MapScan(row)
 			if err != nil {
 				log.Println(err.Error())
-				return nil
+				return nil, err
 			}
 			result = append(result, row)
 		}
 		rows.Close()
-		return &QueryResult{Data: result}
+		return (*QueryResult)(&result), err
 
 		/**
 		 * Code above is test using Normal method, the code below
@@ -141,13 +139,38 @@ func (s *MainDBService) Query(query string) *QueryResult {
 		_, err := db.Exec(query)
 		if err != nil {
 			log.Println(err.Error())
-			return nil
+			return nil, err
 		}
 
-		return &QueryResult{Data: nil}
+		return &QueryResult{nil}, err
 	}
 }
 
 func (r *QueryResult) ToStruct(result interface{}) error {
-	return ConvertToStruct(r.Data, result)
+	//jika error
+	if *r == nil {
+		return fmt.Errorf("result is nil")
+	}
+
+	hasil_query := []map[string]interface{}(*r)
+
+	err := NewConvertToStruct(hasil_query, result)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MainDBService) QueryToStruct(query string, result interface{}) (*QueryResult, error) {
+	queryResult, err_query := s.Query(query)
+	if err_query != nil {
+		return nil, fmt.Errorf("query failed")
+	}
+	err := queryResult.ToStruct(result)
+	if err != nil {
+		return nil, err
+	}
+	return queryResult, nil
 }
